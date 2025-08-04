@@ -74,7 +74,53 @@ GET /api/customers/{customer_id}/orders
 }
 ```
 
-### 4. Get Statistics
+### 4. Get All Orders
+```
+GET /api/orders?page=1&per_page=10
+```
+**Parameters:**
+- `page` (optional): Page number (default: 1)
+- `per_page` (optional): Items per page (default: 10, max: 100)
+
+**Response:**
+```json
+{
+  "orders": [...],
+  "pagination": {
+    "page": 1,
+    "per_page": 10,
+    "total_count": 125226,
+    "total_pages": 12523,
+    "has_next": true,
+    "has_prev": false
+  }
+}
+```
+
+### 5. Get Specific Order Details
+```
+GET /api/orders/{order_id}
+```
+**Response:**
+```json
+{
+  "order": {
+    "order_id": 1,
+    "user_id": 1,
+    "status": "delivered",
+    "created_at": "2022-01-15",
+    "shipped_at": "2022-01-16",
+    "delivered_at": "2022-01-18",
+    "returned_at": null,
+    "num_of_item": 3,
+    "first_name": "Rhonda",
+    "last_name": "Potter",
+    "email": "rhonda@example.com"
+  }
+}
+```
+
+### 6. Get Statistics
 ```
 GET /api/statistics
 ```
@@ -132,6 +178,16 @@ curl "http://localhost:5000/api/customers/1"
 ### Get customer orders:
 ```bash
 curl "http://localhost:5000/api/customers/1/orders"
+```
+
+### Get all orders:
+```bash
+curl "http://localhost:5000/api/orders?page=1&per_page=5"
+```
+
+### Get specific order details:
+```bash
+curl "http://localhost:5000/api/orders/1"
 ```
 
 ### Get statistics:

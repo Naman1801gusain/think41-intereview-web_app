@@ -79,10 +79,46 @@ def test_api():
     
     print("\n" + "-" * 30)
     
-    # Test 5: Test error handling
-    print("5. Testing error handling - Customer not found")
+    # Test 5: Get all orders
+    print("5. Testing GET /api/orders")
     try:
-        response = requests.get(f"{BASE_URL}/customers/99999")
+        response = requests.get(f"{BASE_URL}/orders?page=1&per_page=5")
+        print(f"Status Code: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Total orders: {data['pagination']['total_count']}")
+            print(f"Orders returned: {len(data['orders'])}")
+            print("✅ All orders endpoint working!")
+        else:
+            print(f"❌ Error: {response.text}")
+    except Exception as e:
+        print(f"❌ Connection error: {e}")
+    
+    print("\n" + "-" * 30)
+    
+    # Test 6: Get specific order details
+    print("6. Testing GET /api/orders/1")
+    try:
+        response = requests.get(f"{BASE_URL}/orders/1")
+        print(f"Status Code: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            order = data['order']
+            print(f"Order ID: {order['order_id']}")
+            print(f"Customer: {order['first_name']} {order['last_name']}")
+            print(f"Status: {order['status']}")
+            print("✅ Order details endpoint working!")
+        else:
+            print(f"❌ Error: {response.text}")
+    except Exception as e:
+        print(f"❌ Connection error: {e}")
+    
+    print("\n" + "-" * 30)
+    
+    # Test 7: Test error handling - Order not found
+    print("7. Testing error handling - Order not found")
+    try:
+        response = requests.get(f"{BASE_URL}/orders/999999")
         print(f"Status Code: {response.status_code}")
         if response.status_code == 404:
             print("✅ Error handling working correctly!")

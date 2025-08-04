@@ -137,6 +137,94 @@ def get_customer_orders(customer_id):
     except Exception as e:
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
+@app.route('/api/orders', methods=['GET'])
+def get_all_orders():
+    """Get all orders with pagination"""
+    try:
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # Validate parameters
+        if page < 1:
+            return jsonify({'error': 'Page number must be greater than 0'}), 400
+        if per_page < 1 or per_page > 100:
+            return jsonify({'error': 'Per page must be between 1 and 100'}), 400
+        
+        offset = (page - 1) * per_page
+        
+        conn = get_db_connection()
+        
+        # Get total count for pagination info
+        total_count = conn.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
+        
+        # Get orders with customer information
+        orders = conn.execute('''
+            SELECT o.order_id, o.user_id, o.status, o.created_at, o.shipped_at, 
+                   o.delivered_at, o.returned_at, o.num_of_item,
+                   u.first_name, u.last_name, u.email
+            FROM orders o
+            LEFT JOIN users u ON o.user_id = u.id
+            ORDER BY o.created_at DESC
+            LIMIT ? OFFSET ?
+        ''', (per_page, offset)).fetchall()
+        
+        # Convert to list of dictionaries
+        orders_list = []
+        for order in orders:
+            orders_list.append(dict(order))
+        
+        # Calculate pagination info
+        total_pages = (total_count + per_page - 1) // per_page
+        
+        conn.close()
+        
+        return jsonify({
+            'orders': orders_list,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total_count': total_count,
+                'total_pages': total_pages,
+                'has_next': page < total_pages,
+                'has_prev': page > 1
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+@app.route('/api/orders/<int:order_id>', methods=['GET'])
+def get_order_details(order_id):
+    """Get specific order details"""
+    try:
+        conn = get_db_connection()
+        
+        # Get order details with customer information
+        order = conn.execute('''
+            SELECT o.order_id, o.user_id, o.status, o.created_at, o.shipped_at, 
+                   o.delivered_at, o.returned_at, o.num_of_item,
+                   u.first_name, u.last_name, u.email
+            FROM orders o
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.order_id = ?
+        ''', (order_id,)).fetchone()
+        
+        conn.close()
+        
+        if order is None:
+            return jsonify({'error': 'Order not found'}), 404
+        
+        # Convert to dictionary
+        order_dict = dict(order)
+        
+        return jsonify({
+            'order': order_dict
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
 @app.route('/api/statistics', methods=['GET'])
 def get_statistics():
     """Get basic order statistics"""
