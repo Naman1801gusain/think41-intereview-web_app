@@ -87,6 +87,15 @@
     <h1>🧪 Think41 API Tester</h1>
     
     <div class="container">
+        <h2>🔗 Connection Test</h2>
+        <div class="test-section">
+            <h3>Test API Connection</h3>
+            <button class="success-btn" onclick="testEndpoint('/api/statistics')">Test Connection</button>
+            <div id="statistics-result" class="result"></div>
+        </div>
+    </div>
+    
+    <div class="container">
         <h2>✅ Working Endpoints</h2>
         
         <div class="test-section">
@@ -176,13 +185,26 @@
             resultDiv.className = 'result info';
             
             try {
-                const response = await fetch(BASE_URL + endpoint);
-                const data = await response.json();
+                const response = await fetch(BASE_URL + endpoint, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = { error: 'Could not parse JSON response' };
+                }
                 
                 const result = {
                     status: response.status,
                     statusText: response.statusText,
                     url: response.url,
+                    headers: Object.fromEntries(response.headers.entries()),
                     data: data
                 };
                 
@@ -195,10 +217,16 @@
                 }
                 
             } catch (error) {
-                resultDiv.innerHTML = `Error: ${error.message}`;
+                resultDiv.innerHTML = `Network Error: ${error.message}\n\nMake sure your API is running at ${BASE_URL}`;
                 resultDiv.className = 'result error';
             }
         }
+        
+        // Test connection on page load
+        window.onload = function() {
+            console.log('Testing API connection...');
+            testEndpoint('/api/statistics');
+        };
     </script>
 </body>
 </html> 
